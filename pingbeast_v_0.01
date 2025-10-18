@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Simple script to set Cloudflare DNS
+# Run with: sudo ./set_cloudflare_dns.sh
+
+echo "Setting Cloudflare DNS..."
+
+# Get active connection name (excluding loopback)
+CONNECTION=$(nmcli -t -f NAME,TYPE connection show --active | grep -v loopback | head -n 1 | cut -d: -f1)
+
+# Set DNS to Cloudflare
+nmcli connection modify "$CONNECTION" ipv4.dns "1.1.1.1 1.0.0.1"
+nmcli connection modify "$CONNECTION" ipv4.ignore-auto-dns yes
+
+# Restart connection
+nmcli connection up "$CONNECTION"
+
+echo "Done! DNS set to 1.1.1.1 and 1.0.0.1"
