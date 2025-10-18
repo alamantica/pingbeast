@@ -13,11 +13,11 @@ fi
 # check which service manages network (NM or network.service)
 declare NETWORK_SERVICE
 for service in {systemd-resolved,NetworkManager,networking}; do
-    if systemctl is-active "${service}.service"; then
+    if systemctl is-active "${service}.service" > /dev/null 2>&1; then
         NETWORK_SERVICE="${service}.service"
     fi
 done
-[[ -n $RESTART ]] || {
+[[ -n $NETWORK_SERVICE ]] || {
     printf >&2 '[ERROR]: Could not determine network management service.\n'
     exit 1
 } 
@@ -26,6 +26,7 @@ done
 
 # Create a new resolv.conf (only if not already configured)
 if ! grep -qi -e "$PRIMARY_DNS" -e "$SECONDARY_DNS" /etc/resolv.conf; then
+    printf "Creating new DNS entries in /etc/resolv.conf...\n"
     # Backup the current resolve.conf
     cp /etc/resolv.conf /etc/resolv.conf.bak
     cat << EOF > /etc/resolv.conf
@@ -33,9 +34,15 @@ if ! grep -qi -e "$PRIMARY_DNS" -e "$SECONDARY_DNS" /etc/resolv.conf; then
 nameserver $PRIMARY_DNS
 nameserver $SECONDARY_DNS
 EOF
+
 fi
 
-systemctl restart "$NETWORK_SERVICE"
+printf "Restarting network service: %s\n" "$NETWORK_SERVICE"
+systemctl restart "$NETWORK_SERVICE" || {
+    printf >&2 "[ERROR]: Failed to restart network service.\n"
+    exit 1
+}
+exit 0
 
 
 
