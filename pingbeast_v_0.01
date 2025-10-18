@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Simple script to set Cloudflare DNS
+# Change permissions with chmod +x 
 # Run with: sudo ./set_cloudflare_dns.sh
 
 echo "Setting Cloudflare DNS..."
